@@ -1,0 +1,13 @@
+[package]
+name = "os"
+version = "0.1.0"
+edition = "2021"
+authors = ["Robin Toncourt <robin.toncourt@laposte.net>"]
+
+[profile.dev]
+panic = "abort"     # Disbale stack unwinding on panic.
+
+[profile.release]
+panic = "abort"     # Disbale stack unwinding on panic.
+
+[dependencies]
