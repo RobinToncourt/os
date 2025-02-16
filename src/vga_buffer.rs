@@ -1,16 +1,24 @@
 use core::fmt;
 
-use volatile::Volatile;
 use lazy_static::lazy_static;
 use spin::Mutex;
+use volatile::Volatile;
+
+const VGA_TEXT_BUFFER_ADDRESS: usize = 0xb8000;
+
+pub const DEFAULT_COLOR_CODE: ColorCode = ColorCode::new(Color::White, Color::Black);
+pub const WHITE_ON_BLACK: ColorCode = ColorCode::new(Color::White, Color::Black);
+pub const RED_ON_BLACK: ColorCode = ColorCode::new(Color::Red, Color::Black);
+pub const RED_ON_WHITE: ColorCode = ColorCode::new(Color::Red, Color::White);
+pub const GREEN_ON_BLACK: ColorCode = ColorCode::new(Color::Green, Color::Black);
+pub const BLUE_ON_BLACK: ColorCode = ColorCode::new(Color::Blue, Color::Black);
 
 lazy_static! {
-    pub static ref VGA_BUFFER_WRITER: Mutex<VgaBufferWriter> = Mutex::new(VgaBufferWriter {
+    static ref VGA_BUFFER_WRITER: Mutex<VgaBufferWriter> = Mutex::new(VgaBufferWriter {
         column_position: 0,
-        color_code: ColorCode::new(Color::Yellow, Color::Black),
         buffer: unsafe {
             // SAFETY: the VGA text buffer is at this address.
-            &mut *(0xb8000 as *mut Buffer)
+            &mut *(VGA_TEXT_BUFFER_ADDRESS as *mut Buffer)
         },
     });
 }
@@ -39,11 +47,11 @@ pub enum Color {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(transparent)]
-struct ColorCode(u8);
+pub struct ColorCode(u8);
 
 impl ColorCode {
-    fn new(foreground: Color, background: Color) -> ColorCode {
-        ColorCode((background as u8) << 4 | (foreground as u8))
+    const fn new(foreground: Color, background: Color) -> ColorCode {
+        ColorCode(((background as u8) << 4) | (foreground as u8))
     }
 }
 
@@ -63,25 +71,26 @@ struct Buffer {
     chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
-pub struct VgaBufferWriter {
+struct VgaBufferWriter {
     column_position: usize,
-    color_code: ColorCode,
     buffer: &'static mut Buffer,
 }
 
 impl VgaBufferWriter {
-    pub fn write_string(&mut self, s: &str) {
+    fn write_string_color(&mut self, s: &str, color_code: ColorCode) {
         for byte in s.bytes() {
-            match byte {
+            let b = match byte {
                 // Printable ASCII byte or newline.
-                0x20..=0x7e | b'\n' => self.write_byte(byte),
+                0x20..=0x7e | b'\n' => byte,
                 // Not part of the printable ASCII range.
-                _ => self.write_byte(0xfe),
-            }
+                _ => 0xfe,
+            };
+
+            self.write_byte(b, color_code);
         }
     }
 
-    pub fn write_byte(&mut self, byte: u8) {
+    fn write_byte(&mut self, byte: u8, color_code: ColorCode) {
         match byte {
             b'\n' => self.new_line(),
             byte => {
@@ -92,7 +101,6 @@ impl VgaBufferWriter {
                 let row = BUFFER_HEIGHT - 1;
                 let col = self.column_position;
 
-                let color_code = self.color_code;
                 self.buffer.chars[row][col].write(ScreenChar {
                     ascii_character: byte,
                     color_code,
@@ -106,7 +114,7 @@ impl VgaBufferWriter {
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
                 let character = self.buffer.chars[row][col].read();
-                self.buffer.chars[row-1][col].write(character);
+                self.buffer.chars[row - 1][col].write(character);
             }
         }
         self.clear_row(BUFFER_HEIGHT - 1);
@@ -117,23 +125,32 @@ impl VgaBufferWriter {
         for col in 0..BUFFER_WIDTH {
             let blank = ScreenChar {
                 ascii_character: b' ',
-                color_code: self.color_code,
+                color_code: DEFAULT_COLOR_CODE,
             };
             self.buffer.chars[row][col].write(blank);
         }
     }
 }
 
-impl fmt::Write for VgaBufferWriter {
+struct StandardOutput;
+impl fmt::Write for StandardOutput {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.write_string(s);
+        VGA_BUFFER_WRITER
+            .lock()
+            .write_string_color(s, DEFAULT_COLOR_CODE);
         Ok(())
     }
 }
 
+#[doc(hidden)]
+pub fn vga_buffer_print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    { StandardOutput }.write_fmt(args).unwrap();
+}
+
 #[macro_export]
 macro_rules! print {
-    ($($arg:tt)*) => ($crate::vga_buffer::_print(format_args!($($arg)*)));
+    ($($arg:tt)*) => ($crate::vga_buffer::vga_buffer_print(format_args!($($arg)*)));
 }
 
 #[macro_export]
@@ -142,30 +159,54 @@ macro_rules! println {
     ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
 }
 
-#[doc(hidden)]
-pub fn _print(args: fmt::Arguments) {
-    use core::fmt::Write;
-    VGA_BUFFER_WRITER.lock().write_fmt(args).unwrap();
+struct StandardError;
+impl fmt::Write for StandardError {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        VGA_BUFFER_WRITER.lock().write_string_color(s, RED_ON_WHITE);
+        Ok(())
+    }
 }
 
+#[doc(hidden)]
+pub fn vga_buffer_eprint(args: fmt::Arguments) {
+    use core::fmt::Write;
+    { StandardError }.write_fmt(args).unwrap();
+}
 
+#[macro_export]
+macro_rules! eprint {
+    ($($arg:tt)*) => ($crate::vga_buffer::vga_buffer_eprint(format_args!($($arg)*)));
+}
 
+#[macro_export]
+macro_rules! eprintln {
+    () => ($crate::eprint!("\n"));
+    ($($arg:tt)*) => ($crate::eprint!("{}\n", format_args!($($arg)*)));
+}
 
+struct ColoredStandardOutput(ColorCode);
+impl fmt::Write for ColoredStandardOutput {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        VGA_BUFFER_WRITER.lock().write_string_color(s, self.0);
+        Ok(())
+    }
+}
 
+#[doc(hidden)]
+pub fn vga_buffer_colored_print(color_code: ColorCode, args: fmt::Arguments) {
+    use core::fmt::Write;
+    { ColoredStandardOutput(color_code) }
+        .write_fmt(args)
+        .unwrap();
+}
 
+#[macro_export]
+macro_rules! colored_print {
+    ($color_code:tt, $($arg:tt)*) => ($crate::vga_buffer::vga_buffer_colored_print($color_code, format_args!($($arg)*)));
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#[macro_export]
+macro_rules! colored_println {
+    () => ($crate::colored_print!("\n"));
+    ($color_code:tt, $($arg:tt)*) => ($crate::colored_print!($color_code, "{}\n", format_args!($($arg)*)));
+}
