@@ -1,14 +1,16 @@
-#![no_std]  // Don't link the Rust standart library.
+#![no_std] // Don't link the Rust standart library.
 #![no_main] // Disable all Rust-level entry points.
 
 mod vga_buffer;
 
 use core::panic::PanicInfo;
+use vga_buffer::GREEN_ON_BLACK;
 
 /// This function is called on panic.
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    println!("{info}");
+    eprintln!("{info}");
+    println!("fin de l'erreur");
     loop {}
 }
 
@@ -16,10 +18,13 @@ fn panic(info: &PanicInfo) -> ! {
 // named `_start` by default.
 #[no_mangle] // Don't mangle the name of this funciton.
 pub extern "C" fn _start() -> ! {
-    let world = "World";
-    println!("Hello {world}{}", "!");
+    println!("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz");
+    println!("&,?;.:/!*%^$<=>{{[()]}}'\"\\");
+    println!("0123456789");
 
-    panic!("Panic test.");
+    colored_println!(GREEN_ON_BLACK, "te{}t", "s");
+
+    panic!("Une erreur en rouge sur du blanc!");
 
     loop {}
 }
