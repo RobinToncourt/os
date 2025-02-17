@@ -1,14 +1,15 @@
 #![no_std] // Don't link the Rust standart library.
 #![no_main] // Disable all Rust-level entry points.
 #![feature(custom_test_frameworks)]
+#![feature(ascii_char)]
 #![test_runner(os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
 
-use os::{colored_println, eprintln, println};
+use os::{colored_print, eprint, eprintln, println};
 
-use os::vga_buffer::GREEN_ON_BLACK;
+use os::vga_buffer::{DEFAULT_COLOR_CODE, RED_ON_WHITE};
 
 // This function is the entry point, since the linker looks for a function
 // named `_start` by default.
@@ -23,7 +24,7 @@ pub extern "C" fn _start() -> ! {
         main();
     }
 
-    eprintln!("Endless loop...");
+    eprint!("Endless loop...");
     #[allow(clippy::empty_loop)]
     loop {}
 }
@@ -43,11 +44,6 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 fn main() {
-    println!("AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz");
-    println!("&,?;.:/!*%^$<=>{{[()]}}'\"\\");
-    println!("0123456789");
-
-    colored_println!(GREEN_ON_BLACK, "{}", (0x10 << 1) | 1);
-
-    panic!("Une erreur en rouge sur du blanc!");
+    println!("Le cœur déçu mais l'âme plutôt naïve, Louÿs rêva de crapaüter en canoë au delà des îles, près du mälström où brûlent les novæ.");
+    println!("À, Â, È, Ê, Ë, Î, Ï, Ô, Œ, œ, Ù, Û, Ÿ");
 }
