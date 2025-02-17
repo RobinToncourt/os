@@ -3,17 +3,23 @@ use lazy_static::lazy_static;
 use spin::Mutex;
 use uart_16550::SerialPort;
 
+const SERIAL_INTERFACE_FIRST_PORT: u16 = 0x3F8;
+
 lazy_static! {
     pub static ref SERIAL1: Mutex<SerialPort> = {
         let mut serial_port = unsafe {
             // SAFETY: standard port number for the first serial interface.
-            SerialPort::new(0x3F8)
+            SerialPort::new(SERIAL_INTERFACE_FIRST_PORT)
         };
         serial_port.init();
         Mutex::new(serial_port)
     };
 }
 
+/// # Panics
+///
+/// Can panic if the serial port is invalid
+/// or if the program doesn't have the necessary rights.
 #[allow(dead_code)]
 pub fn uart_16550_print(args: ::core::fmt::Arguments) {
     SERIAL1
@@ -22,7 +28,6 @@ pub fn uart_16550_print(args: ::core::fmt::Arguments) {
         .expect("Printing to serial failed.");
 }
 
-/// Prints to the hast through the serial interface.
 #[macro_export]
 macro_rules! serial_print {
     ($($args:tt)*) => {
@@ -30,7 +35,6 @@ macro_rules! serial_print {
     };
 }
 
-/// Prints to the host through the serial interface, appending a newline.
 #[macro_export]
 macro_rules! serial_println {
     () => ($crate::serial_print!("\n"));

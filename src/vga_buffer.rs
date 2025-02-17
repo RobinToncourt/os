@@ -58,6 +58,7 @@ pub enum Color {
 pub struct ColorCode(u8);
 
 impl ColorCode {
+    #[must_use]
     pub const fn new(foreground: Color, background: Color) -> ColorCode {
         ColorCode(((background as u8) << 4) | (foreground as u8))
     }
@@ -148,6 +149,9 @@ impl fmt::Write for StandardOutput {
     }
 }
 
+/// # Panics
+///
+/// Can't panic.
 pub fn vga_buffer_print(args: fmt::Arguments) {
     use core::fmt::Write;
     { StandardOutput }.write_fmt(args).unwrap();
@@ -175,6 +179,9 @@ impl fmt::Write for StandardError {
     }
 }
 
+/// # Panics
+///
+/// Can't panic.
 pub fn vga_buffer_eprint(args: fmt::Arguments) {
     use core::fmt::Write;
     { StandardError }.write_fmt(args).unwrap();
@@ -202,6 +209,9 @@ impl fmt::Write for ColoredStandardOutput {
     }
 }
 
+/// # Panics
+///
+/// Can't panic.
 pub fn vga_buffer_colored_print(color_code: ColorCode, args: fmt::Arguments) {
     use core::fmt::Write;
     { ColoredStandardOutput(color_code) }
