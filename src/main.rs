@@ -7,9 +7,9 @@
 
 use core::panic::PanicInfo;
 
-use os::{colored_print, eprint, eprintln, println};
-
-use os::vga_buffer::{DEFAULT_COLOR_CODE, RED_ON_WHITE};
+use os::{eprint, println};
+#[cfg(not(test))]
+use os::eprintln;
 
 // This function is the entry point, since the linker looks for a function
 // named `_start` by default.
@@ -46,4 +46,5 @@ fn panic(info: &PanicInfo) -> ! {
 fn main() {
     println!("Le cœur déçu mais l'âme plutôt naïve, Louÿs rêva de crapaüter en canoë au delà des îles, près du mälström où brûlent les novæ.");
     println!("À, Â, È, Ê, Ë, Î, Ï, Ô, Œ, œ, Ù, Û, Ÿ");
+    println!("{}", os::vga_buffer::ALL_CODE_PAGE437_CHARACTER);
 }
