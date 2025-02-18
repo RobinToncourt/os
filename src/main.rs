@@ -7,9 +7,9 @@
 
 use core::panic::PanicInfo;
 
-use os::{eprint, println};
 #[cfg(not(test))]
 use os::eprintln;
+use os::{eprint, println};
 
 // This function is the entry point, since the linker looks for a function
 // named `_start` by default.

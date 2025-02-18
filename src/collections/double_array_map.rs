@@ -14,7 +14,7 @@ pub struct DoubleArrayMap<const CAPACITY: usize, K, V> {
     values: [V; CAPACITY],
 }
 
-impl<const CAPACITY: usize, K, V> DoubleArrayMap <CAPACITY, K, V> {
+impl<const CAPACITY: usize, K, V> DoubleArrayMap<CAPACITY, K, V> {
     fn get_size(&self) -> usize {
         self.size
     }
@@ -25,7 +25,7 @@ impl<const CAPACITY: usize, K, V> DoubleArrayMap <CAPACITY, K, V> {
     }
 }
 
-impl<const CAPACITY: usize, K, V> DoubleArrayMap <CAPACITY, K, V>
+impl<const CAPACITY: usize, K, V> DoubleArrayMap<CAPACITY, K, V>
 where
     K: Default + Copy,
     V: Default + Copy,
@@ -40,7 +40,7 @@ where
     }
 }
 
-impl<const CAPACITY: usize, K, V> Default for DoubleArrayMap <CAPACITY, K, V>
+impl<const CAPACITY: usize, K, V> Default for DoubleArrayMap<CAPACITY, K, V>
 where
     K: Default + Copy,
     V: Default + Copy,
@@ -50,7 +50,7 @@ where
     }
 }
 
-impl<const CAPACITY: usize, K, V> DoubleArrayMap <CAPACITY, K, V>
+impl<const CAPACITY: usize, K, V> DoubleArrayMap<CAPACITY, K, V>
 where
     K: Eq,
 {
@@ -90,8 +90,8 @@ where
 
 #[cfg(test)]
 mod double_array_map_test {
-    use super::*;
     use super::DoubleArrayMap as Dam;
+    use super::*;
 
     #[test_case]
     fn test_insert_get_size_capacity() {
@@ -102,7 +102,10 @@ mod double_array_map_test {
         assert_eq!(map.insert(0, "zero"), Ok(None));
         assert_eq!(map.insert(1, "un"), Ok(None));
         assert_eq!(map.insert(2, "deux"), Ok(None));
-        assert_eq!(map.insert(3, "trois"), Err(DoubleArrayMapError::ExceedCapacity));
+        assert_eq!(
+            map.insert(3, "trois"),
+            Err(DoubleArrayMapError::ExceedCapacity)
+        );
 
         assert_eq!(map.get_size(), 3);
 
