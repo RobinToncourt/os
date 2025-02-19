@@ -1,4 +1,6 @@
+use core::fmt;
 use core::fmt::Write;
+
 use lazy_static::lazy_static;
 use spin::Mutex;
 use uart_16550::SerialPort;
@@ -14,6 +16,26 @@ lazy_static! {
         serial_port.init();
         Mutex::new(serial_port)
     };
+}
+
+pub struct Red(pub &'static str);
+impl fmt::Display for Red {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\x1B[91m")?;
+        write!(f, "{}", self.0)?;
+        write!(f, "\x1B[0m")?;
+        Ok(())
+    }
+}
+
+pub struct Green(pub &'static str);
+impl fmt::Display for Green {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\x1B[32m")?;
+        write!(f, "{}", self.0)?;
+        write!(f, "\x1B[0m")?;
+        Ok(())
+    }
 }
 
 /// # Panics

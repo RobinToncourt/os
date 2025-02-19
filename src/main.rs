@@ -2,7 +2,7 @@
 #![no_main] // Disable all Rust-level entry points.
 #![feature(custom_test_frameworks)]
 #![feature(ascii_char)]
-#![test_runner(os::test_runner)]
+#![test_runner(os::test_utils::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
@@ -10,6 +10,9 @@ use core::panic::PanicInfo;
 #[cfg(not(test))]
 use os::eprintln;
 use os::{eprint, println};
+
+#[cfg(test)]
+use os::test_utils::test_panic_handler;
 
 // This function is the entry point, since the linker looks for a function
 // named `_start` by default.
@@ -32,7 +35,7 @@ pub extern "C" fn _start() -> ! {
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    os::test_panic_handler(info)
+    test_panic_handler(info)
 }
 
 #[cfg(not(test))]
