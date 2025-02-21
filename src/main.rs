@@ -19,6 +19,9 @@ use os::test_utils::test_panic_handler;
 // Used to setup up before the main or the test_main.
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    println!("Initializing idt.");
+    os::init();
+
     println!("System booted.");
     if cfg!(test) {
         #[cfg(test)]
@@ -41,8 +44,8 @@ fn panic(info: &PanicInfo) -> ! {
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
+    eprintln!("Panic!");
     eprintln!("{info}");
-    println!("fin de l'erreur");
     loop {}
 }
 

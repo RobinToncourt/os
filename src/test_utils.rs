@@ -110,6 +110,7 @@ macro_rules! assert {
 #[cfg(test)]
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    crate::init();
     crate::test_main();
     loop {}
 }
@@ -120,17 +121,23 @@ fn panic(info: &PanicInfo) -> ! {
     test_panic_handler(info)
 }
 
-#[test_case]
-fn failing_assert_test() {
-    assert!(false);
-    panic!("Should not panics.");
+#[cfg(test)]
+mod assert_tests {
+    use super::*;
+
+    #[test_case]
+    fn failing_assert_test() {
+        assert!(false);
+        panic!("Should not panics.");
+    }
+
+    #[test_case]
+    fn failing_assert_eq_test() {
+        assert_eq!(0, 1);
+        panic!("Should not panics.");
+    }
+
+    #[test_case]
+    fn empty_test() {}
 }
 
-#[test_case]
-fn failing_assert_eq_test() {
-    assert_eq!(0, 1);
-    panic!("Should not panics.");
-}
-
-#[test_case]
-fn empty_test() {}
