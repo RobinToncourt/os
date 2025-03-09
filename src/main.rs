@@ -19,7 +19,6 @@ use os::test_utils::test_panic_handler;
 // Used to setup up before the main or the test_main.
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    println!("Initializing idt.");
     os::init();
 
     println!("System booted.");
