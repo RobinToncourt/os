@@ -29,4 +29,4 @@ harness = false
 
 [[test]]
 name = "stack_overflow"
-haness = false
+harness = false
