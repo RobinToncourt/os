@@ -40,6 +40,7 @@ pub fn init() {
     println!("Initializing gdt.");
     GDT.0.load();
     unsafe {
+        // SAFETY:
         CS::set_reg(GDT.1.code_selector);
         load_tss(GDT.1.tss_selector);
     }

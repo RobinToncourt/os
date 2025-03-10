@@ -9,6 +9,7 @@ use core::panic::PanicInfo;
 
 #[cfg(not(test))]
 use os::eprintln;
+use os::hlt_loop;
 use os::vga_buffer::GREEN_ON_BLACK;
 use os::{colored_println, println};
 
@@ -30,9 +31,7 @@ pub extern "C" fn _start() -> ! {
         main();
     }
 
-    // eprint!("Endless loop...");
-    #[allow(clippy::empty_loop)]
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(test)]
@@ -44,9 +43,8 @@ fn panic(info: &PanicInfo) -> ! {
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    eprintln!("Panic!");
-    eprintln!("{info}");
-    loop {}
+    eprintln!("Panic!\n{info}");
+    hlt_loop();
 }
 
 fn main() {

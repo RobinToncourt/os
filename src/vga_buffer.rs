@@ -326,6 +326,13 @@ impl VgaBufferWriter {
     }
 }
 
+impl fmt::Write for VgaBufferWriter {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write_string_color(s, DEFAULT_COLOR_CODE);
+        Ok(())
+    }
+}
+
 struct ColoredStandardOutput(ColorCode);
 impl fmt::Write for ColoredStandardOutput {
     fn write_str(&mut self, s: &str) -> fmt::Result {
@@ -392,6 +399,8 @@ macro_rules! colored_println {
 #[cfg(test)]
 mod test_vga_buffer {
     use super::*;
+    use core::fmt::Write;
+    use x86_64::instructions::interrupts;
 
     #[test_case]
     fn test_println_simple() {
@@ -408,10 +417,13 @@ mod test_vga_buffer {
     #[test_case]
     fn test_println_output() {
         let s = "Some test string taht fits on a single line.";
-        println!("{s}");
-        for (i, c) in s.chars().enumerate() {
-            let screen_char = VGA_BUFFER_WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
-            assert_eq!(char::from(screen_char.ascii_character), c);
-        }
+        interrupts::without_interrupts(|| {
+            let mut writer = VGA_BUFFER_WRITER.lock();
+            writeln!(writer, "\n{s}").expect("writeln failed");
+            for (i, c) in s.chars().enumerate() {
+                let screen_char = writer.buffer.chars[BUFFER_HEIGHT - 2][i].read();
+                assert_eq!(char::from(screen_char.ascii_character), c);
+            }
+        });
     }
 }

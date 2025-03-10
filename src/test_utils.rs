@@ -4,6 +4,7 @@ use core::panic::PanicInfo;
 use lazy_static::lazy_static;
 use spin::Mutex;
 
+use crate::hlt_loop;
 use crate::serial::{Green, Red};
 use crate::stack_string::StackString;
 use crate::{exit_qemu, QemuExitCode};
@@ -19,8 +20,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     serial_println!("{}", Red("FAILED"));
     serial_println!("Error: {}\n", info);
     exit_qemu(QemuExitCode::Failed);
-    #[allow(clippy::empty_loop)]
-    loop {}
+    hlt_loop();
 }
 
 pub trait Testable {
@@ -112,7 +112,7 @@ macro_rules! assert {
 pub extern "C" fn _start() -> ! {
     crate::init();
     crate::test_main();
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(test)]
