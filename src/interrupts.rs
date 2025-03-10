@@ -11,11 +11,10 @@ use crate::{print, println};
 pub const PIC_1_OFFSET: u8 = 32;
 pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
 
-pub static PICS: spin::Mutex<ChainedPics> =
-    spin::Mutex::new(unsafe {
-        // SAFETY: the ports are not used.
-        ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET)
-    });
+pub static PICS: spin::Mutex<ChainedPics> = spin::Mutex::new(unsafe {
+    // SAFETY: the ports are not used.
+    ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET)
+});
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {

@@ -5,6 +5,7 @@
 #![test_runner(crate::test_utils::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+pub mod code_page_437;
 pub mod collections;
 pub mod gdt;
 pub mod interrupts;

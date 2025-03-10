@@ -50,7 +50,7 @@ fn panic(info: &PanicInfo) -> ! {
 fn main() {
     println!("Le cœur déçu mais l'âme plutôt naïve, Louÿs rêva de crapaüter en canoë au delà des îles, près du mälström où brûlent les novæ.");
     println!("À, Â, È, Ê, Ë, Î, Ï, Ô, Œ, œ, Ù, Û, Ÿ");
-    println!("{}", os::vga_buffer::ALL_CODE_PAGE437_CHARACTER);
+    println!("{}", os::code_page_437::ALL_CODE_PAGE437_CHARACTER);
 
     colored_println!(GREEN_ON_BLACK, "bonjour en vert!");
 }
