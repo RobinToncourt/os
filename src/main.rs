@@ -9,7 +9,8 @@ use core::panic::PanicInfo;
 
 #[cfg(not(test))]
 use os::eprintln;
-use os::{eprint, println};
+use os::{println, eprint, colored_println};
+use os::vga_buffer::GREEN_ON_BLACK;
 
 #[cfg(test)]
 use os::test_utils::test_panic_handler;
@@ -52,4 +53,6 @@ fn main() {
     println!("Le cœur déçu mais l'âme plutôt naïve, Louÿs rêva de crapaüter en canoë au delà des îles, près du mälström où brûlent les novæ.");
     println!("À, Â, È, Ê, Ë, Î, Ï, Ô, Œ, œ, Ù, Û, Ÿ");
     println!("{}", os::vga_buffer::ALL_CODE_PAGE437_CHARACTER);
+
+    colored_println!(GREEN_ON_BLACK, "bonjour en vert!");
 }

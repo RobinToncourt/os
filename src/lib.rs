@@ -38,4 +38,6 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
 pub fn init() {
     interrupts::init_idt();
     gdt::init();
+    unsafe { interrupts::PICS.lock().initialize() };
+    // x86_64::instructions::interrupts::enable();
 }

@@ -7,7 +7,7 @@ use core::panic::PanicInfo;
 use lazy_static::lazy_static;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
-use os::{exit_qemu, QemuExitCode, serial_print, serial_println};
+use os::{exit_qemu, serial_print, serial_println, QemuExitCode};
 
 lazy_static! {
     static ref TEST_IDT: InterruptDescriptorTable = {
