@@ -339,9 +339,13 @@ impl fmt::Write for ColoredStandardOutput {
 /// Can't panic.
 pub fn vga_buffer_colored_print(color_code: ColorCode, args: fmt::Arguments) {
     use core::fmt::Write;
-    { ColoredStandardOutput(color_code) }
-        .write_fmt(args)
-        .unwrap();
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(|| {
+        { ColoredStandardOutput(color_code) }
+            .write_fmt(args)
+            .unwrap();
+    });
 }
 
 /// Print to the standard output in white with black background.

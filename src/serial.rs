@@ -44,10 +44,14 @@ impl fmt::Display for Green {
 /// or if the program doesn't have the necessary rights.
 #[allow(dead_code)]
 pub fn uart_16550_print(args: ::core::fmt::Arguments) {
-    SERIAL1
-        .lock()
-        .write_fmt(args)
-        .expect("Printing to serial failed.");
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(|| {
+        SERIAL1
+            .lock()
+            .write_fmt(args)
+            .expect("Printing to serial failed.");
+    });
 }
 
 #[macro_export]
