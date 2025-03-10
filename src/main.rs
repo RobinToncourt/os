@@ -9,8 +9,8 @@ use core::panic::PanicInfo;
 
 #[cfg(not(test))]
 use os::eprintln;
-use os::{println, eprint, colored_println};
 use os::vga_buffer::GREEN_ON_BLACK;
+use os::{print, println, colored_println};
 
 #[cfg(test)]
 use os::test_utils::test_panic_handler;
@@ -30,9 +30,11 @@ pub extern "C" fn _start() -> ! {
         main();
     }
 
-    eprint!("Endless loop...");
+    // eprint!("Endless loop...");
     #[allow(clippy::empty_loop)]
-    loop {}
+    loop {
+        print!("-");
+    }
 }
 
 #[cfg(test)]

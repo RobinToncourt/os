@@ -326,68 +326,6 @@ impl VgaBufferWriter {
     }
 }
 
-struct StandardOutput;
-impl fmt::Write for StandardOutput {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        VGA_BUFFER_WRITER
-            .lock()
-            .write_string_color(s, DEFAULT_COLOR_CODE);
-        Ok(())
-    }
-}
-
-/// # Panics
-///
-/// Can't panic.
-pub fn vga_buffer_print(args: fmt::Arguments) {
-    use core::fmt::Write;
-    { StandardOutput }.write_fmt(args).unwrap();
-}
-
-/// Print to the standard output in white with black background.
-#[macro_export]
-macro_rules! print {
-    ($($arg:tt)*) => ($crate::vga_buffer::vga_buffer_print(format_args!($($arg)*)));
-}
-
-/// Print to the standard output in white with black background,
-/// appending a newline.
-#[macro_export]
-macro_rules! println {
-    () => ($crate::print!("\n"));
-    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
-}
-
-struct StandardError;
-impl fmt::Write for StandardError {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        VGA_BUFFER_WRITER.lock().write_string_color(s, RED_ON_WHITE);
-        Ok(())
-    }
-}
-
-/// # Panics
-///
-/// Can't panic.
-pub fn vga_buffer_eprint(args: fmt::Arguments) {
-    use core::fmt::Write;
-    { StandardError }.write_fmt(args).unwrap();
-}
-
-/// Print to the standard output in red with white background.
-#[macro_export]
-macro_rules! eprint {
-    ($($arg:tt)*) => ($crate::vga_buffer::vga_buffer_eprint(format_args!($($arg)*)));
-}
-
-/// Print to the standard output in red with white background,
-/// appending a newline.
-#[macro_export]
-macro_rules! eprintln {
-    () => ($crate::eprint!("\n"));
-    ($($arg:tt)*) => ($crate::eprint!("{}\n", format_args!($($arg)*)));
-}
-
 struct ColoredStandardOutput(ColorCode);
 impl fmt::Write for ColoredStandardOutput {
     fn write_str(&mut self, s: &str) -> fmt::Result {
@@ -404,6 +342,34 @@ pub fn vga_buffer_colored_print(color_code: ColorCode, args: fmt::Arguments) {
     { ColoredStandardOutput(color_code) }
         .write_fmt(args)
         .unwrap();
+}
+
+/// Print to the standard output in white with black background.
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::vga_buffer::vga_buffer_colored_print($crate::vga_buffer::DEFAULT_COLOR_CODE, format_args!($($arg)*)));
+}
+
+/// Print to the standard output in white with black background,
+/// appending a newline.
+#[macro_export]
+macro_rules! println {
+    () => ($crate::print!("\n"));
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+/// Print to the standard output in red with white background.
+#[macro_export]
+macro_rules! eprint {
+    ($($arg:tt)*) => ($crate::vga_buffer::vga_buffer_colored_print($crate::vga_buffer::RED_ON_WHITE, format_args!($($arg)*)));
+}
+
+/// Print to the standard output in red with white background,
+/// appending a newline.
+#[macro_export]
+macro_rules! eprintln {
+    () => ($crate::eprint!("\n"));
+    ($($arg:tt)*) => ($crate::eprint!("{}\n", format_args!($($arg)*)));
 }
 
 /// Print to the standard output with custom color.
