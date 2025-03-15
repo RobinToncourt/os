@@ -39,6 +39,7 @@ lazy_static! {
         let _ = map.insert('↔', 0x1d);
         let _ = map.insert('▲', 0x1e);
         let _ = map.insert('▼', 0x1f);
+
         let _ = map.insert('⌂', 0x7f);
         let _ = map.insert('Ç', 0x80);
         let _ = map.insert('ü', 0x81);
