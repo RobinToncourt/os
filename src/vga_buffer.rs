@@ -5,6 +5,7 @@ use spin::Mutex;
 use volatile::Volatile;
 
 use crate::code_page_437::UTF_8_TO_CODE_PAGE_437_MAP;
+use crate::stack_string::StackString;
 
 const VGA_TEXT_BUFFER_ADDRESS: usize = 0xb8000;
 const BUFFER_HEIGHT: usize = 25;
@@ -24,6 +25,11 @@ pub const GREEN_ON_BLACK: ColorCode = ColorCode::new(Color::Green, Color::Black)
 pub const BLUE_ON_BLACK: ColorCode = ColorCode::new(Color::Blue, Color::Black);
 
 lazy_static! {
+    static ref BLANK_CHAR: ScreenChar = ScreenChar {
+        ascii_character: b' ',
+        color_code: DEFAULT_COLOR_CODE,
+    };
+
     pub static ref VGA_BUFFER_WRITER: Mutex<VgaBufferWriter> = Mutex::new(VgaBufferWriter {
         column_position: 0,
         buffer: unsafe {
@@ -126,6 +132,29 @@ impl VgaBufferWriter {
         }
     }
 
+    #[must_use]
+    pub fn get_line(&self) -> StackString<BUFFER_WIDTH> {
+        let mut result = StackString::<BUFFER_WIDTH>::default();
+
+        let row = BUFFER_HEIGHT - 1;
+        for screen_char in &self.buffer.chars[row] {
+            let _ = result.push(char::from(screen_char.read().ascii_character));
+        }
+
+        result
+    }
+
+    pub fn backspace(&mut self) {
+        if self.column_position > 0 {
+            self.column_position -= 1;
+
+            let row = BUFFER_HEIGHT - 1;
+            let col = self.column_position;
+
+            self.buffer.chars[row][col].write(*BLANK_CHAR);
+        }
+    }
+
     fn new_line(&mut self) {
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
@@ -139,11 +168,7 @@ impl VgaBufferWriter {
 
     fn clear_row(&mut self, row: usize) {
         for col in 0..BUFFER_WIDTH {
-            let blank = ScreenChar {
-                ascii_character: b' ',
-                color_code: DEFAULT_COLOR_CODE,
-            };
-            self.buffer.chars[row][col].write(blank);
+            self.buffer.chars[row][col].write(*BLANK_CHAR);
         }
     }
 }
