@@ -74,7 +74,7 @@ macro_rules! assert_eq {
     ($left:expr, $right:expr $(,)?) => {
         if !($left == $right) {
             use core::fmt::Write;
-            let test_state: &mut $crate::test_utils::TestState = &mut $crate::test_utils::TEST_STATE.lock();
+            let test_state = &mut $crate::test_utils::TEST_STATE.lock();
             test_state.failed = true;
             let _ = test_state.write_fmt(format_args!(
                 " left = {:#?}\nright = {:#?}\n",
@@ -83,7 +83,18 @@ macro_rules! assert_eq {
             return;
         }
     };
-    ($left:expr, $right:expr, $($arg:tt)+) => {};
+    ($left:expr, $right:expr, $($arg:tt)+) => {
+        if !($left == $right) {
+            use core::fmt::Write;
+            let test_state = &mut $crate::test_utils::TEST_STATE.lock();
+            test_state.failed = true;
+            let _ = test_state.write_fmt(format_args!(
+                " left = {:#?}\nright = {:#?}\n{}\n",
+                $left, $right, format_args!($($arg)+)
+            ));
+            return;
+        }
+    };
 }
 
 #[macro_export]
@@ -91,13 +102,21 @@ macro_rules! assert {
     ($cond:expr $(,)?) => {
         if !$cond {
             use core::fmt::Write;
-            let test_state: &mut $crate::test_utils::TestState = &mut $crate::test_utils::TEST_STATE.lock();
+            let test_state = &mut $crate::test_utils::TEST_STATE.lock();
             test_state.failed = true;
             let _ = test_state.write_fmt(format_args!("{}", "Assertion failed."));
             return;
         }
     };
-    ($cond:expr, $($arg:tt)+) => {};
+    ($cond:expr, $($arg:tt)+) => {
+        if !$cond {
+            use core::fmt::Write;
+            let test_state = &mut $crate::test_utils::TEST_STATE.lock();
+            test_state.failed = true;
+            let _ = test_state.write_fmt(format_args!("{}", format_args!($($arg)+)));
+            return;
+        }
+    };
 }
 
 /// Entry point for `cargo test`.
@@ -124,8 +143,22 @@ mod assert_tests {
     }
 
     #[test_case]
+    fn failing_assert_with_message_test() {
+        let the_message = "This message should be printed.";
+        assert!(false, "{the_message}");
+        panic!("Should not panics.");
+    }
+
+    #[test_case]
     fn failing_assert_eq_test() {
         assert_eq!(0, 1);
+        panic!("Should not panics.");
+    }
+
+    #[test_case]
+    fn failing_assert_eq_with_message_test() {
+        let the_message = "This message should be printed.";
+        assert_eq!(2, 3, "{the_message}");
         panic!("Should not panics.");
     }
 
