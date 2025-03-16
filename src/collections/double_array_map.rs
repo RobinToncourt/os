@@ -1,10 +1,21 @@
 #![allow(dead_code)]
 
+use core::fmt;
+
 const EXCEED_CAPACITY: &str = "Capacity exceeded!";
 
 #[derive(Debug, PartialEq)]
 pub enum DoubleArrayMapError {
     ExceedCapacity,
+}
+
+impl fmt::Display for DoubleArrayMapError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use DoubleArrayMapError as E;
+        match self {
+            E::ExceedCapacity => write!(f, "{EXCEED_CAPACITY}"),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -15,7 +26,7 @@ pub struct DoubleArrayMap<const CAPACITY: usize, K, V> {
 }
 
 impl<const CAPACITY: usize, K, V> DoubleArrayMap<CAPACITY, K, V> {
-    fn get_size(&self) -> usize {
+    fn len(&self) -> usize {
         self.size
     }
 
@@ -90,30 +101,44 @@ where
 
 #[cfg(test)]
 mod double_array_map_test {
+    use crate::assert_eq;
+
     use super::DoubleArrayMap as Dam;
     use super::*;
 
     #[test_case]
     fn test_insert_get_size_capacity() {
         let mut map: Dam<3, usize, &str> = Dam::new();
-        assert_eq!(map.get_size(), 0);
+        assert_eq!(map.len(), 0);
         assert_eq!(map.get_capacity(), 3);
 
-        assert_eq!(map.insert(0, "zero"), Ok(None));
-        assert_eq!(map.insert(1, "un"), Ok(None));
-        assert_eq!(map.insert(2, "deux"), Ok(None));
+        assert_eq!(
+            map.insert(0, "zero"),
+            Ok::<Option<&str>, DoubleArrayMapError>(None::<&str>)
+        );
+        assert_eq!(
+            map.insert(1, "un"),
+            Ok::<Option<&str>, DoubleArrayMapError>(None::<&str>)
+        );
+        assert_eq!(
+            map.insert(2, "deux"),
+            Ok::<Option<&str>, DoubleArrayMapError>(None::<&str>)
+        );
         assert_eq!(
             map.insert(3, "trois"),
-            Err(DoubleArrayMapError::ExceedCapacity)
+            Err::<Option<&str>, DoubleArrayMapError>(DoubleArrayMapError::ExceedCapacity)
         );
 
-        assert_eq!(map.get_size(), 3);
+        assert_eq!(map.len(), 3);
 
         assert_eq!(map.get(&0), Some(&"zero"));
         assert_eq!(map.get(&1), Some(&"un"));
         assert_eq!(map.get(&2), Some(&"deux"));
-        assert_eq!(map.get(&3), None);
+        assert_eq!(map.get(&3), None::<&&str>);
 
-        assert_eq!(map.insert(1, "meilleur un"), Ok(Some("un")));
+        assert_eq!(
+            map.insert(1, "meilleur un"),
+            Ok::<Option<&str>, DoubleArrayMapError>(Some("un"))
+        );
     }
 }
