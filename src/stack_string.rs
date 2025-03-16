@@ -1,7 +1,8 @@
 use core::fmt;
 
+#[derive(Debug, PartialEq)]
 pub enum StackStringError {
-    ExceedCapacity,
+    ExceedCapacity(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -39,7 +40,7 @@ impl<const CAPACITY: usize> StackString<CAPACITY> {
     /// Will return 'Err' if capacity is reached.
     pub fn push(&mut self, c: char) -> Result<(), StackStringError> {
         if self.size >= CAPACITY {
-            return Err(StackStringError::ExceedCapacity);
+            return Err(StackStringError::ExceedCapacity(0));
         }
 
         self.data[self.size] = c;
@@ -57,7 +58,7 @@ impl<const CAPACITY: usize> StackString<CAPACITY> {
 
         for c in s.chars() {
             if self.size >= CAPACITY {
-                return Err(StackStringError::ExceedCapacity);
+                return Err(StackStringError::ExceedCapacity(chars_written));
             }
 
             self.data[self.size] = c;
@@ -118,7 +119,27 @@ mod stack_string_test {
     #[test_case]
     fn test_stack_string() {
         let mut s = StackString::<5>::default();
+
+        assert!(s.is_empty());
+
         assert!(s.push('a').is_ok());
+        assert_eq!(s.len(), 1);
         assert_eq!(s.pop(), Some('a'));
+        assert_eq!(s.pop(), None::<char>);
+
+        assert_eq!(s.push_str("abcde"), Ok::<usize, StackStringError>(5));
+        assert_eq!(s.len(), 5);
+        assert!(s.push('f').is_err());
+        assert_eq!(
+            s.push_str("ghi"),
+            Err::<usize, StackStringError>(StackStringError::ExceedCapacity(0))
+        );
+
+        s.clear();
+        assert!(s.is_empty());
+        assert_eq!(
+            s.push_str("abcdefghi"),
+            Err::<usize, StackStringError>(StackStringError::ExceedCapacity(5))
+        );
     }
 }
