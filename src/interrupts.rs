@@ -1,12 +1,13 @@
 use lazy_static::lazy_static;
-use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
+use pc_keyboard::{layouts, HandleControl, Keyboard, ScancodeSet1};
 use pic8259::ChainedPics;
 use spin;
 use x86_64::instructions::port::Port;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
+use crate::coquille::COQUILLE;
 use crate::gdt;
-use crate::{print, println};
+use crate::println;
 
 pub const PIC_1_OFFSET: u8 = 32;
 pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
@@ -15,6 +16,10 @@ pub static PICS: spin::Mutex<ChainedPics> = spin::Mutex::new(unsafe {
     // SAFETY: the ports are not used.
     ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET)
 });
+
+static KEYBOARD: spin::Mutex<Keyboard<layouts::Azerty, ScancodeSet1>> = spin::Mutex::new(
+    Keyboard::new(ScancodeSet1::new(), layouts::Azerty, HandleControl::Ignore),
+);
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
@@ -30,12 +35,7 @@ lazy_static! {
         idt[InterruptIndex::Keyboard.into_usize()].set_handler_fn(keyboard_interrupt_handler);
         idt
     };
-    static ref KEYBOARD: spin::Mutex<Keyboard<layouts::Us104Key, ScancodeSet1>> =
-        spin::Mutex::new(Keyboard::new(
-            ScancodeSet1::new(),
-            layouts::Us104Key,
-            HandleControl::Ignore
-        ));
+
 }
 
 #[derive(Debug, Clone)]
@@ -82,10 +82,7 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
 
     if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
         if let Some(key) = keyboard.process_keyevent(key_event) {
-            match key {
-                DecodedKey::Unicode(character) => print!("{character}"),
-                DecodedKey::RawKey(key) => print!("{key:?}"),
-            }
+            COQUILLE.lock().push_key(key);
         }
     }
 
