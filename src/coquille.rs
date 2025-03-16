@@ -46,7 +46,11 @@ fn exec_command(command: &[char]) {
     let (length, binding) = char_slice_to_utf8_slice(command);
     let command: &str = str::from_utf8(&binding[..length]).expect("not valid utf-8");
 
-    println!("'{command}'");
+    let splited: &mut dyn Iterator<Item = &str> = &mut command.split_whitespace();
+
+    for part in splited {
+        println!("'{part}'");
+    }
 }
 
 fn char_slice_to_utf8_slice(char_slice: &[char]) -> (usize, [u8; COMMAND_MAX_LENGTH * 4]) {
@@ -55,7 +59,7 @@ fn char_slice_to_utf8_slice(char_slice: &[char]) -> (usize, [u8; COMMAND_MAX_LEN
     let mut i = 0;
     for c in char_slice {
         let _ = c.encode_utf8(&mut utf8_bytes[i..]);
-        i += get_slice_first_zero(&mut utf8_bytes[i..]);
+        i += get_slice_first_zero(&utf8_bytes[i..]);
     }
 
     (i, utf8_bytes)
@@ -63,14 +67,12 @@ fn char_slice_to_utf8_slice(char_slice: &[char]) -> (usize, [u8; COMMAND_MAX_LEN
 
 fn get_slice_first_zero(slice: &[u8]) -> usize {
     let mut result = 0;
-    let mut iter = slice.iter();
 
-    while let Some(byte) = iter.next() {
+    for byte in slice {
         if *byte == 0 {
             break;
-        } else {
-            result += 1;
         }
+        result += 1;
     }
 
     result
