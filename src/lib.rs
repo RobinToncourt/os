@@ -7,6 +7,7 @@
 
 pub mod code_page_437;
 pub mod collections;
+pub mod commands;
 pub mod coquille;
 pub mod gdt;
 pub mod interrupts;

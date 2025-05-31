@@ -144,7 +144,7 @@ impl VgaBufferWriter {
         result
     }
 
-    pub fn backspace(&mut self) {
+    pub fn remove_last(&mut self) {
         if self.column_position > 0 {
             self.column_position -= 1;
 

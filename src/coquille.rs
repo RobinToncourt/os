@@ -22,7 +22,7 @@ impl Coquille {
         match key {
             DecodedKey::Unicode(character) => match character {
                 '\u{8}' => {
-                    VGA_BUFFER_WRITER.lock().backspace();
+                    VGA_BUFFER_WRITER.lock().remove_last();
                     let _ = self.current_characters.pop();
                 }
                 '\n' => {
