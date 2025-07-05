@@ -1,6 +1,8 @@
 use core::fmt;
 use core::panic::PanicInfo;
 
+#[cfg(test)]
+use bootloader::{entry_point, BootInfo};
 use lazy_static::lazy_static;
 use spin::Mutex;
 
@@ -119,10 +121,12 @@ macro_rules! assert {
     };
 }
 
+#[cfg(test)]
+entry_point!(test_kernel_main);
+
 /// Entry point for `cargo test`.
 #[cfg(test)]
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+pub fn test_kernel_main(_boot_info: &'static BootInfo) -> ! {
     crate::init();
     crate::test_main();
     hlt_loop();

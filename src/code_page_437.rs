@@ -6,6 +6,9 @@ use crate::collections::double_array_map::DoubleArrayMap;
 #[allow(dead_code)]
 pub const ALL_CODE_PAGE437_CHARACTER: &str = "☺☻♥♦♣♠•◘○♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■";
 
+pub const PANGRAMME: &str = "Le cœur déçu mais l'âme plutôt naïve, Louÿs rêva de crapaüter en canoë au delà des îles, près du mälström où brûlent les novæ.";
+pub const PANGRAMME_MISSING_CHAR: &str = "À, Â, È, Ê, Ë, Î, Ï, Ô, Œ, œ, Ù, Û, Ÿ";
+
 lazy_static! {
     pub static ref UTF_8_TO_CODE_PAGE_437_MAP: DoubleArrayMap<168, char, u8> = {
         let mut map = DoubleArrayMap::new();

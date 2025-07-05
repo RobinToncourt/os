@@ -11,6 +11,7 @@ pub mod commands;
 pub mod coquille;
 pub mod gdt;
 pub mod interrupts;
+pub mod memory;
 pub mod serial;
 pub mod stack_string;
 pub mod vga_buffer;
