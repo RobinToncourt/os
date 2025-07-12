@@ -5,13 +5,14 @@
 #![test_runner(os::test_utils::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+extern crate alloc;
+
+use alloc::boxed::Box;
 use core::panic::PanicInfo;
 
 use bootloader::{entry_point, BootInfo};
-use x86_64::{
-    structures::paging::{Page, Translate},
-    VirtAddr,
-};
+use os::allocator;
+use x86_64::VirtAddr;
 
 #[cfg(not(test))]
 use os::eprintln;
@@ -53,6 +54,8 @@ fn panic(info: &PanicInfo) -> ! {
     os::hlt_loop();
 }
 
+use alloc::{rc::Rc, vec, vec::Vec};
+
 fn main(boot_info: &'static BootInfo) {
     colored_println!(GREEN_ON_BLACK, "bonjour en vert!");
 
@@ -62,32 +65,34 @@ fn main(boot_info: &'static BootInfo) {
         // at the provided offset, also it is called once here.
         memory::init(phys_mem_offset)
     };
-    let mut frame_allocator = unsafe { memory::BootInfoFrameAllocator::new(&boot_info.memory_map) };
-
-    // Map an unused page.
-    let page = Page::containing_address(VirtAddr::new(0x0dea_dbea_f000));
-    memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
-
-    // Write the string `New!` to the screen through the new mapping.
-    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
-    unsafe {
-        page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e);
+    let mut frame_allocator = unsafe {
+        // SAFETY: `memory_map` is provided by the boot info.
+        memory::BootInfoFrameAllocator::new(&boot_info.memory_map)
     };
+    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initalization failed");
 
-    let addresses = [
-        // The identity-mapped vga buffer page.
-        0xb8000,
-        // Some code page.
-        0x0020_1008,
-        // Some stack page.
-        0x0100_0020_1a10,
-        // Virtual address mapped to physical address 0.
-        boot_info.physical_memory_offset,
-    ];
+    // Allocate a number on the heap.
+    let heap_value = Box::new(42);
+    println!("heap_value {heap_value} at {heap_value:p}");
 
-    for &address in &addresses {
-        let virt = VirtAddr::new(address);
-        let phys = mapper.translate(virt);
-        println!("{virt:?} -> {phys:?}");
+    // Create a dynamically sized vector.
+    let mut vec = Vec::<usize>::new();
+    for i in 0..500 {
+        vec.push(i);
     }
+    println!("vec at {:p}", vec.as_slice());
+
+    // Create a reference counter vector -> will be freed when count reaches 0.
+    let reference_counted = Rc::new(vec![1, 2, 3]);
+    let cloned_reference = Rc::clone(&reference_counted);
+
+    println!(
+        "current reference count is {}.",
+        Rc::strong_count(&cloned_reference)
+    );
+    core::mem::drop(reference_counted);
+    println!(
+        "reference count is {} now.",
+        Rc::strong_count(&cloned_reference)
+    );
 }
