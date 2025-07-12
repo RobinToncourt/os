@@ -11,20 +11,13 @@ use alloc::vec::Vec;
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
 
-use os::allocator;
 use os::allocator::HEAP_SIZE;
-use os::memory::{self, BootInfoFrameAllocator};
 use os::test_utils::test_panic_handler;
-use x86_64::VirtAddr;
 
 entry_point!(main);
 
 fn main(boot_info: &'static BootInfo) -> ! {
-    os::init();
-    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mut mapper = unsafe { memory::init(phys_mem_offset) };
-    let mut frame_allocator = unsafe { BootInfoFrameAllocator::new(&boot_info.memory_map) };
-    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
+    os::init(boot_info);
 
     test_main();
     loop {}

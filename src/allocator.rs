@@ -1,3 +1,4 @@
+use bootloader::bootinfo::MemoryMap;
 use linked_list_allocator::LockedHeap;
 use x86_64::{
     structures::paging::{
@@ -5,6 +6,8 @@ use x86_64::{
     },
     VirtAddr,
 };
+
+use crate::memory;
 
 pub const HEAP_START: usize = 0x4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
@@ -17,9 +20,20 @@ static HEAP_ALLOCATOR: LockedHeap = LockedHeap::empty();
 /// Fails if no frame left, `HUGE_PAGE` are in use or the given page is already
 /// mapped to a physical frame.
 pub fn init_heap(
-    mapper: &mut impl Mapper<Size4KiB>,
-    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+    physical_memory_offset: u64,
+    memory_map: &'static MemoryMap,
 ) -> Result<(), MapToError<Size4KiB>> {
+    let phys_mem_offset = VirtAddr::new(physical_memory_offset);
+    let mut mapper = unsafe {
+        // SAFETY: complete physical memory is mapped to virtual memory
+        // at the provided offset, also it is called once here.
+        memory::init(phys_mem_offset)
+    };
+    let mut frame_allocator = unsafe {
+        // SAFETY: `memory_map` is provided by the boot info.
+        memory::BootInfoFrameAllocator::new(memory_map)
+    };
+
     let page_range = {
         let heap_start = VirtAddr::new(HEAP_START as u64);
         let heap_end = heap_start + HEAP_SIZE - 1_u64;
@@ -34,7 +48,9 @@ pub fn init_heap(
             .ok_or(MapToError::FrameAllocationFailed)?;
         let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
         unsafe {
-            mapper.map_to(page, frame, flags, frame_allocator)?.flush();
+            mapper
+                .map_to(page, frame, flags, &mut frame_allocator)?
+                .flush();
         }
     }
 

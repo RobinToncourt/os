@@ -11,12 +11,9 @@ use alloc::boxed::Box;
 use core::panic::PanicInfo;
 
 use bootloader::{entry_point, BootInfo};
-use os::allocator;
-use x86_64::VirtAddr;
 
 #[cfg(not(test))]
 use os::eprintln;
-use os::memory;
 use os::vga_buffer::GREEN_ON_BLACK;
 use os::{colored_println, println};
 
@@ -28,14 +25,14 @@ entry_point!(kernel_main);
 // This function is the entry point.
 // Used to setup up before the main or the test_main.
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-    os::init();
+    os::init(boot_info);
 
     println!("System booted.");
     if cfg!(test) {
         #[cfg(test)]
         test_main();
     } else {
-        main(boot_info);
+        main();
     }
 
     os::hlt_loop();
@@ -56,20 +53,8 @@ fn panic(info: &PanicInfo) -> ! {
 
 use alloc::{rc::Rc, vec, vec::Vec};
 
-fn main(boot_info: &'static BootInfo) {
-    colored_println!(GREEN_ON_BLACK, "bonjour en vert!");
-
-    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mut mapper = unsafe {
-        // SAFETY: complete physical memory is mapped to virtual memory
-        // at the provided offset, also it is called once here.
-        memory::init(phys_mem_offset)
-    };
-    let mut frame_allocator = unsafe {
-        // SAFETY: `memory_map` is provided by the boot info.
-        memory::BootInfoFrameAllocator::new(&boot_info.memory_map)
-    };
-    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initalization failed");
+fn main() {
+    colored_println!(GREEN_ON_BLACK, "Bonjour en vert !");
 
     // Allocate a number on the heap.
     let heap_value = Box::new(42);

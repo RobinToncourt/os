@@ -21,6 +21,7 @@ pub mod vga_buffer;
 
 pub mod test_utils;
 
+use bootloader::BootInfo;
 use x86_64::instructions::port::Port;
 
 const ISA_DEBUG_EXIT_IOBASE: u16 = 0xF4;
@@ -42,7 +43,11 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
     }
 }
 
-pub fn init() {
+/// # Panics
+///
+/// Fails if no frame left, `HUGE_PAGE` are in use or the given page is already
+/// mapped to a physical frame.
+pub fn init(boot_info: &'static BootInfo) {
     interrupts::init_idt();
     gdt::init();
     unsafe {
@@ -50,6 +55,8 @@ pub fn init() {
         interrupts::PICS.lock().initialize();
     };
     x86_64::instructions::interrupts::enable();
+    allocator::init_heap(boot_info.physical_memory_offset, &boot_info.memory_map)
+        .expect("heap initalization failed");
 }
 
 pub fn hlt_loop() -> ! {
