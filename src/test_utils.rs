@@ -126,8 +126,8 @@ entry_point!(test_kernel_main);
 
 /// Entry point for `cargo test`.
 #[cfg(test)]
-pub fn test_kernel_main(_boot_info: &'static BootInfo) -> ! {
-    crate::init();
+pub fn test_kernel_main(boot_info: &'static BootInfo) -> ! {
+    crate::init(boot_info);
     crate::test_main();
     hlt_loop();
 }
