@@ -35,7 +35,7 @@ impl<A> Locked<A> {
         }
     }
 
-    pub fn lock(&self) -> spin::MutexGuard<A> {
+    pub fn lock(&self) -> spin::MutexGuard<'_, A> {
         self.inner.lock()
     }
 }

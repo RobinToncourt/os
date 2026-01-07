@@ -42,17 +42,18 @@ impl Coquille {
     }
 }
 
-fn exec_command(command: &[char]) {
-    let (length, binding) = char_slice_to_utf8_slice(command);
+fn exec_command(_command: &[char]) {
+    /*let (length, binding) = char_slice_to_utf8_slice(command);
     let command: &str = str::from_utf8(&binding[..length]).expect("not valid utf-8");
 
     let splited: &mut dyn Iterator<Item = &str> = &mut command.split_whitespace();
 
     for part in splited {
         println!("'{part}'");
-    }
+    }*/
 }
 
+#[allow(dead_code)]
 fn char_slice_to_utf8_slice(char_slice: &[char]) -> (usize, [u8; COMMAND_MAX_LENGTH * 4]) {
     let mut utf8_bytes = [0u8; COMMAND_MAX_LENGTH * 4];
 

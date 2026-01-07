@@ -17,6 +17,7 @@ pub mod interrupts;
 pub mod memory;
 pub mod serial;
 pub mod stack_string;
+pub mod task;
 pub mod vga_buffer;
 
 pub mod test_utils;
@@ -56,7 +57,7 @@ pub fn init(boot_info: &'static BootInfo) {
     };
     x86_64::instructions::interrupts::enable();
     allocator::init_heap(boot_info.physical_memory_offset, &boot_info.memory_map)
-        .expect("heap initalization failed");
+        .expect("heap initialization failed");
 }
 
 pub fn hlt_loop() -> ! {

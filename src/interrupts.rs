@@ -1,11 +1,9 @@
 use lazy_static::lazy_static;
-use pc_keyboard::{layouts, HandleControl, Keyboard, ScancodeSet1};
 use pic8259::ChainedPics;
 use spin;
 use x86_64::instructions::port::Port;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode};
 
-use crate::coquille::COQUILLE;
 use crate::gdt;
 use crate::hlt_loop;
 use crate::println;
@@ -17,10 +15,6 @@ pub static PICS: spin::Mutex<ChainedPics> = spin::Mutex::new(unsafe {
     // SAFETY: the ports are not used.
     ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET)
 });
-
-static KEYBOARD: spin::Mutex<Keyboard<layouts::Azerty, ScancodeSet1>> = spin::Mutex::new(
-    Keyboard::new(ScancodeSet1::new(), layouts::Azerty, HandleControl::Ignore),
-);
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
@@ -77,18 +71,12 @@ extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFr
 /// Interrupt that handles the keyboard inputs.
 /// Transfers the keyboard input to the shell(coquille).
 extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStackFrame) {
-    let mut keyboard = KEYBOARD.lock();
     let mut port = Port::new(0x60);
     let scancode: u8 = unsafe {
         // SAFETY: keyboard data port is 0x60.
         port.read()
     };
-
-    if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
-        if let Some(key) = keyboard.process_keyevent(key_event) {
-            COQUILLE.lock().push_key(key);
-        }
-    }
+    crate::task::keyboard::add_scancode(scancode);
 
     unsafe {
         // SAFETY: keyboard interrupt handled.
